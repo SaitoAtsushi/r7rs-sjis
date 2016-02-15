@@ -1,6 +1,8 @@
 ;; -*- mode: scheme -*-
 (define-library (encode sjis)
-  (export string->sjis utf8->sjis sjis->utf8)
+  (export string->sjis
+          utf8->sjis sjis->utf8
+          utf8->sjis/port sjis->utf8/port)
   (import (scheme base))
 (begin
 
@@ -28,23 +30,25 @@
                (r header (+ (* r 64) (read-subsequent port))))
               ((= i len) r))))))
 
+(define (utf8->sjis/port in out)
+  (do ((ch (read-char-from-bv in) (read-char-from-bv in)))
+      ((eof-object? ch) (get-output-bytevector out))
+    (let ((code ch))
+      (if (<= code 127)
+          (write-u8 code out)
+          (let ((sc (binary-search unicode-sjis-table code)))
+            (unless sc
+              (error "Not included letter in Shift_JIS code" ch))
+            (if (>= sc 256)
+                (begin
+                  (write-u8 (quotient sc 256) out)
+                  (write-u8 (modulo sc 256) out))
+                (write-u8 sc)))))))
+
 (define (utf8->sjis bv)
   (let ((out (open-output-bytevector)))
     (call-with-port (open-input-bytevector bv)
-      (lambda(in)
-        (do ((ch (read-char-from-bv in) (read-char-from-bv in)))
-            ((eof-object? ch) (get-output-bytevector out))
-          (let ((code ch))
-            (if (<= code 127)
-                (write-u8 code out)
-                (let ((sc (binary-search unicode-sjis-table code)))
-                  (unless sc
-                    (error "Not included letter in Shift_JIS code" ch))
-                  (if (>= sc 256)
-                      (begin
-                        (write-u8 (quotient sc 256) out)
-                        (write-u8 (modulo sc 256) out))
-                      (write-u8 sc))))))))))
+      (lambda(in) (utf8->sjis/port in out)))))
 
 (define (binary-search vec target)
   (let loop ((min 0)
@@ -92,19 +96,21 @@
          (write-u8 (+ #x80 (quotient (modulo n #x1000) 64)) port)
          (write-u8 (+ #x80 (modulo n 64)) port))))
 
+(define (sjis->utf8/port in out)
+  (do ((ch (read-char-from-sjisbv in) (read-char-from-sjisbv in)))
+      ((eof-object? ch) (get-output-bytevector out))
+    (let ((code ch))
+      (if (<= code 127)
+          (write-u8 code out)
+          (let ((cp (binary-search sjis-unicode-table code)))
+            (unless cp
+              (error "Not included letter in Shift_JIS code" ch))
+            (write-as-utf8 cp out))))))
+
 (define (sjis->utf8 bv)
   (let ((out (open-output-bytevector)))
     (call-with-port (open-input-bytevector bv)
-      (lambda(in)
-        (do ((ch (read-char-from-sjisbv in) (read-char-from-sjisbv in)))
-            ((eof-object? ch) (get-output-bytevector out))
-          (let ((code ch))
-            (if (<= code 127)
-                (write-u8 code out)
-                (let ((cp (binary-search sjis-unicode-table code)))
-                  (unless cp
-                    (error "Not included letter in Shift_JIS code" ch))
-                  (write-as-utf8 cp out)))))))))
+      (lambda(in) (sjis->utf8/port in out)))))
 
 (define sjis-unicode-table
   #((0 . 0)
