@@ -32,7 +32,7 @@
 
 (define (utf8->sjis/port in out)
   (do ((ch (read-char-from-bv in) (read-char-from-bv in)))
-      ((eof-object? ch) (get-output-bytevector out))
+      ((eof-object? ch))
     (let ((code ch))
       (if (<= code 127)
           (write-u8 code out)
@@ -98,7 +98,7 @@
 
 (define (sjis->utf8/port in out)
   (do ((ch (read-char-from-sjisbv in) (read-char-from-sjisbv in)))
-      ((eof-object? ch) (get-output-bytevector out))
+      ((eof-object? ch))
     (let ((code ch))
       (if (<= code 127)
           (write-u8 code out)
