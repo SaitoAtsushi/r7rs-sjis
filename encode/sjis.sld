@@ -90,7 +90,7 @@
          (write-u8 n port))
         ((<= #x80 n #x7ff)
          (write-u8 (+ #xc0 (quotient n 64)) port)
-         (write-u8 (+ #x80 (modulo n 64))) port)
+         (write-u8 (+ #x80 (modulo n 64)) port))
         ((<= #x800 n #xffff)
          (write-u8 (+ #xe0 (quotient n #x1000)) port)
          (write-u8 (+ #x80 (quotient (modulo n #x1000) 64)) port)
