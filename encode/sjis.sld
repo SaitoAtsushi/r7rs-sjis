@@ -43,7 +43,7 @@
                 (begin
                   (write-u8 (quotient sc 256) out)
                   (write-u8 (modulo sc 256) out))
-                (write-u8 sc)))))))
+                (write-u8 sc out)))))))
 
 (define (utf8->sjis bv)
   (let ((out (open-output-bytevector)))
