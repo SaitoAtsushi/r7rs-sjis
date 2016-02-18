@@ -44,7 +44,8 @@
 (define (utf8->sjis bv)
   (let ((out (open-output-bytevector)))
     (call-with-port (open-input-bytevector bv)
-      (lambda(in) (utf8->sjis/port in out)))))
+      (lambda(in) (utf8->sjis/port in out)))
+    (get-output-bytevector out)))
 
 (define (binary-search vec target)
   (let loop ((min 0)
@@ -95,7 +96,8 @@
 (define (sjis->utf8 bv)
   (let ((out (open-output-bytevector)))
     (call-with-port (open-input-bytevector bv)
-      (lambda(in) (sjis->utf8/port in out)))))
+      (lambda(in) (sjis->utf8/port in out)))
+    (get-output-bytevector out)))
 
 (define sjis-unicode-table
   #((161 . #u8(239 189 161))
